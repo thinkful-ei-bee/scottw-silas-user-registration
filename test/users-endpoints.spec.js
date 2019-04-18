@@ -1,3 +1,4 @@
+'use strict';
 /* global supertest, expect */
 
 const knex = require('knex');
@@ -26,7 +27,7 @@ describe.only('Users Endpoints', function() {
       beforeEach('insert users', () => 
         helpers.seedUsers(
           db,
-          testUsers,
+          testUsers
         )
       );
 
@@ -47,9 +48,33 @@ describe.only('Users Endpoints', function() {
             .post('/api/users')
             .send(registerAttemptBody)
             .expect(400, {
-              error: `Missing ${field} in request body`,
+              error: `Missing '${field}' in request body`,
             });
         });
+      });
+
+      it('responds 400 \'Password must be longer than 8 characters\' when short password', () => {
+        const userShortPassword = {
+          user_name: 'test user_name',
+          password: '1234567',
+          full_name: 'test full_name'
+        };
+        return supertest(app)
+          .post('/api/users')
+          .send(userShortPassword)
+          .expect(400, { error: 'Password must be longer than 8 characters'});
+      });
+
+      it('responds 400 \'Password must be less than 72 characters\' when long password', () => {
+        const userLongPassword = {
+          user_name: 'test user_name',
+          password: '*'.repeat(73),
+          full_name: 'test full_name'
+        };
+        return supertest(app)
+          .post('/api/users')
+          .send(userLongPassword)
+          .expect(400, { error: 'Password must be less than 72 characters'});
       });
     });
   });
